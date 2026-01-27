@@ -7,6 +7,9 @@ functionality for reward decomposition and decision tracking.
 
 import gymnasium as gym
 import numpy as np
+
+# Import highway_env to register the environments with gymnasium
+import highway_env  # noqa: F401
 from dataclasses import dataclass
 from typing import Any, Dict, Optional, Tuple
 
