@@ -17,6 +17,9 @@ import numpy as np
 # Store active WebSocket connections
 active_connections: Set[WebSocket] = set()
 
+# Store the event loop for cross-thread broadcasting
+_server_loop = None
+
 # Simulation state that will be broadcast
 simulation_state = {
     "episode": 0,
@@ -36,6 +39,8 @@ simulation_state = {
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup and shutdown events."""
+    global _server_loop
+    _server_loop = asyncio.get_event_loop()
     print("Starting WebSocket server...")
     yield
     print("Shutting down WebSocket server...")
@@ -50,7 +55,7 @@ app = FastAPI(
 # Enable CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -136,6 +141,24 @@ async def broadcast_state(state: dict):
     active_connections.difference_update(disconnected)
 
 
+def _sync_broadcast():
+    """Synchronous wrapper to broadcast state from non-async context."""
+    global _server_loop
+    if not active_connections or _server_loop is None:
+        return
+
+    message = json.dumps({"type": "state_update", "data": simulation_state})
+
+    for connection in active_connections.copy():
+        try:
+            asyncio.run_coroutine_threadsafe(
+                connection.send_text(message),
+                _server_loop
+            )
+        except Exception as e:
+            print(f"Broadcast error: {e}")
+
+
 def update_state(
     episode: int = None,
     step: int = None,
@@ -173,6 +196,9 @@ def update_state(
         simulation_state["currentSpeed"] = current_speed
 
     simulation_state["isLive"] = True
+
+    # Broadcast to connected clients synchronously
+    _sync_broadcast()
 
 
 def run_server(host: str = "0.0.0.0", port: int = 8000):
