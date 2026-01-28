@@ -161,6 +161,22 @@ def _sync_broadcast():
             print(f"Broadcast error: {e}")
 
 
+def _to_python_type(value):
+    """Convert numpy types to Python native types for JSON serialization."""
+    import numpy as np
+    if isinstance(value, (np.integer, np.int64, np.int32)):
+        return int(value)
+    elif isinstance(value, (np.floating, np.float64, np.float32)):
+        return float(value)
+    elif isinstance(value, np.ndarray):
+        return value.tolist()
+    elif isinstance(value, list):
+        return [_to_python_type(v) for v in value]
+    elif isinstance(value, dict):
+        return {k: _to_python_type(v) for k, v in value.items()}
+    return value
+
+
 def update_navigation_state(
     episode: int = None,
     step: int = None,
@@ -180,19 +196,19 @@ def update_navigation_state(
 ):
     """Update simulation state and broadcast to clients."""
     if episode is not None:
-        simulation_state["episode"] = episode
+        simulation_state["episode"] = int(episode)
     if step is not None:
-        simulation_state["step"] = step
+        simulation_state["step"] = int(step)
     if current_node is not None:
-        simulation_state["currentNode"] = current_node
+        simulation_state["currentNode"] = int(current_node)
     if target_node is not None:
-        simulation_state["targetNode"] = target_node
+        simulation_state["targetNode"] = int(target_node)
     if path_taken is not None:
-        simulation_state["pathTaken"] = path_taken
+        simulation_state["pathTaken"] = [int(n) for n in path_taken]
     if optimal_path is not None:
-        simulation_state["optimalPath"] = optimal_path
+        simulation_state["optimalPath"] = [int(n) for n in optimal_path] if optimal_path else []
     if current_action is not None:
-        simulation_state["currentAction"] = current_action
+        simulation_state["currentAction"] = int(current_action)
     if action_probs is not None:
         simulation_state["actionProbs"] = {str(k): float(v) for k, v in action_probs.items()}
     if reward is not None:
@@ -204,11 +220,11 @@ def update_navigation_state(
     if current_speed is not None:
         simulation_state["currentSpeed"] = float(current_speed)
     if agent_stats is not None:
-        simulation_state["agentStats"] = agent_stats
+        simulation_state["agentStats"] = _to_python_type(agent_stats)
     if probability_evolution is not None:
-        simulation_state["probabilityEvolution"] = probability_evolution
+        simulation_state["probabilityEvolution"] = _to_python_type(probability_evolution)
     if step_history is not None:
-        simulation_state["stepHistory"] = step_history
+        simulation_state["stepHistory"] = _to_python_type(step_history)
 
     simulation_state["isLive"] = True
 
