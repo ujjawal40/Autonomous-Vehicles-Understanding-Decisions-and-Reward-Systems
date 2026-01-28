@@ -7,11 +7,12 @@ Entry point for the Autonomous Decision Visualizer API server.
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.database import get_db, Database
 from src.api.training_api import router as training_router
+from src.api.websocket_handler import websocket_endpoint, manager
 
 
 @asynccontextmanager
@@ -85,6 +86,24 @@ async def root():
         "name": "Autonomous Decision Visualizer",
         "version": "1.0.0",
         "docs": "/docs",
+    }
+
+
+# ============================================
+# WEBSOCKET ENDPOINTS
+# ============================================
+
+@app.websocket("/ws/training")
+async def training_websocket(websocket: WebSocket):
+    """WebSocket endpoint for real-time training updates."""
+    await websocket_endpoint(websocket)
+
+
+@app.get("/ws/status")
+async def websocket_status():
+    """Get WebSocket connection status."""
+    return {
+        "active_connections": manager.connection_count,
     }
 
 
