@@ -14,3 +14,4 @@ export { RiskGauge } from './RiskGauge';
 export { MetricsPanel } from './MetricsPanel';
 export { TrainingHistory } from './TrainingHistory';
 export { AlgorithmSelector } from './AlgorithmSelector';
+export { HyperparameterEditor } from './HyperparameterEditor';
