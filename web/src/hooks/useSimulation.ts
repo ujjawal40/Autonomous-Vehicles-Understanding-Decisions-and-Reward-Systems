@@ -19,7 +19,7 @@ export function useSimulation(wsUrl: string = 'ws://localhost:8000/ws') {
   const [state, setState] = useState<SimulationState>(INITIAL_STATE);
   const [isConnected, setIsConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const connect = useCallback(() => {
     try {

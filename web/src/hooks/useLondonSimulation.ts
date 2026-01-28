@@ -99,7 +99,7 @@ export function useLondonSimulation(wsUrl: string = 'ws://localhost:8001/ws/lond
   const [mapData, setMapData] = useState<MapData | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const connect = useCallback(() => {
     try {

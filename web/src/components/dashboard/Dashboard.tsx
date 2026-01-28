@@ -88,17 +88,17 @@ export function Dashboard() {
   });
 
   // Probability data
-  const [currentProbs, setCurrentProbs] = useState([0.25, 0.25, 0.25, 0.25]);
-  const [episodeHistory, setEpisodeHistory] = useState<
+  const [currentProbs, _setCurrentProbs] = useState([0.25, 0.25, 0.25, 0.25]);
+  const [episodeHistory, _setEpisodeHistory] = useState<
     { step: number; probs: number[]; action: number }[]
   >([]);
-  const [allEpisodes, setAllEpisodes] = useState<
+  const [allEpisodes, _setAllEpisodes] = useState<
     { episode: number; steps: { step: number; probs: number[]; action: number }[] }[]
   >([]);
 
   // Risk data
-  const [riskScore, setRiskScore] = useState(0.3);
-  const [entropy, setEntropy] = useState(0.5);
+  const [riskScore, _setRiskScore] = useState(0.3);
+  const [entropy, _setEntropy] = useState(0.5);
 
   // History
   const [selectedRuns, setSelectedRuns] = useState<number[]>([]);

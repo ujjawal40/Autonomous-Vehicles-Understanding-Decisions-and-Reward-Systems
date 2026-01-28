@@ -143,7 +143,7 @@ export function ProbabilityEvolution({ data, currentEpisode }: ProbabilityEvolut
     const actions = Object.keys(ACTION_COLORS);
 
     // First pass: draw filled areas (stacked)
-    actions.forEach((action, actionIndex) => {
+    actions.forEach((action, _actionIndex) => {
       if (data.length < 2) return;
 
       ctx.beginPath();

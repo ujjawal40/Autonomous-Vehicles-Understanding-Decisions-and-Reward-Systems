@@ -30,7 +30,7 @@ export function RiskGauge({
   trend = 'stable',
 }: RiskGaugeProps) {
   // Calculate gauge parameters
-  const { color, label, glowClass } = useMemo(() => {
+  const { color, label } = useMemo(() => {
     if (riskScore < 0.3) {
       return {
         color: '#00ff88',

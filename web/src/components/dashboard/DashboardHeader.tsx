@@ -8,10 +8,7 @@ import { useState } from 'react';
 import {
   Activity,
   Settings,
-  Moon,
-  Sun,
   Github,
-  ExternalLink,
   Menu,
   X,
 } from 'lucide-react';

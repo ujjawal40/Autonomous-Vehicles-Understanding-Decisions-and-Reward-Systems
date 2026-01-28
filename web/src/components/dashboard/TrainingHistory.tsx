@@ -252,7 +252,7 @@ function SuccessChart({
             borderRadius: 4,
             fontSize: 12,
           }}
-          formatter={(value: number) => [`${value.toFixed(1)}%`, 'Success Rate']}
+          formatter={(value) => [`${Number(value).toFixed(1)}%`, 'Success Rate']}
         />
         <Legend />
         {runs.map((run, idx) => (
