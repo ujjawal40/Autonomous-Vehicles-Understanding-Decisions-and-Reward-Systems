@@ -20,3 +20,4 @@ export { ActionDecisionPanel } from './ActionDecisionPanel';
 export { RewardBreakdownPanel } from './RewardBreakdownPanel';
 export { VehicleStatePanel } from './VehicleStatePanel';
 export { DecisionFeed } from './DecisionFeed';
+export { DashboardV2 } from './DashboardV2';
