@@ -18,3 +18,4 @@ export { HyperparameterEditor } from './HyperparameterEditor';
 export { EpisodeViewer } from './EpisodeViewer';
 export { ActionDecisionPanel } from './ActionDecisionPanel';
 export { RewardBreakdownPanel } from './RewardBreakdownPanel';
+export { VehicleStatePanel } from './VehicleStatePanel';
