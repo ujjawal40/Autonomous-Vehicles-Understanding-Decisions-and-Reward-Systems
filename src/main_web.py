@@ -97,33 +97,33 @@ def run_simulation(
                 info=info
             )
 
-            # Calculate speed
-            ego_speed = np.sqrt(next_observation[0, 2]**2 + next_observation[0, 3]**2)
+            # Calculate speed (convert to Python float)
+            ego_speed = float(np.sqrt(next_observation[0, 2]**2 + next_observation[0, 3]**2))
 
-            # Format reward components for frontend
+            # Format reward components for frontend (convert numpy floats)
             reward_components = [
-                {"name": name, "value": value, "explanation": reward_breakdown.explanations.get(name, "")}
+                {"name": name, "value": float(value), "explanation": reward_breakdown.explanations.get(name, "")}
                 for name, value in reward_breakdown.components.items()
             ]
 
-            # Format action probabilities for frontend
+            # Format action probabilities for frontend (convert numpy floats)
             probs = action_probs.probabilities
             action_probabilities = [
                 {
                     "action": env.ACTIONS[a],
-                    "probability": p,
+                    "probability": float(p),
                     "isChosen": a == action
                 }
                 for a, p in probs.items()
             ]
 
-            # Create decision record
+            # Create decision record (convert numpy floats)
             decision_id += 1
             decision = {
                 "id": decision_id,
                 "step": step,
                 "action": env.ACTIONS[action],
-                "reward": reward_breakdown.total_reward,
+                "reward": float(reward_breakdown.total_reward),
                 "timestamp": time.time(),
             }
 
@@ -135,8 +135,8 @@ def run_simulation(
                 decision=decision,
                 reward_components=reward_components,
                 action_probabilities=action_probabilities,
-                total_reward=reward_breakdown.total_reward,
-                risk_level=reward_breakdown.total_risk,
+                total_reward=float(reward_breakdown.total_reward),
+                risk_level=float(reward_breakdown.total_risk),
                 current_action=env.ACTIONS[action],
                 current_speed=ego_speed,
             )
