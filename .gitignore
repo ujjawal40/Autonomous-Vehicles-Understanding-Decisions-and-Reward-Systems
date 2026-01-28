@@ -87,3 +87,5 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
+cache/
+src/london/cache/
