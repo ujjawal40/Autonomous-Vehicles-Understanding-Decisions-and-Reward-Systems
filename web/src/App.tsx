@@ -7,9 +7,12 @@ import {
   ActionProbabilities,
   AgentTooltip,
 } from './components';
+import { LondonPage } from './components/london/LondonPage';
 import { useSimulation } from './hooks/useSimulation';
 
-function App() {
+type AppMode = 'highway' | 'london';
+
+function HighwayMode() {
   const { state, isConnected } = useSimulation();
   const [tooltipVisible, setTooltipVisible] = useState(false);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
@@ -93,6 +96,44 @@ function App() {
         risk={state.riskLevel}
       />
     </div>
+  );
+}
+
+function ModeSelector({ currentMode, onModeChange }: { currentMode: AppMode; onModeChange: (mode: AppMode) => void }) {
+  return (
+    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex gap-2 bg-space-900/95 border border-space-700 rounded-lg p-1">
+      <button
+        onClick={() => onModeChange('highway')}
+        className={`px-4 py-2 text-sm font-mono rounded transition-all ${
+          currentMode === 'highway'
+            ? 'bg-cyber-blue/20 text-cyber-blue border border-cyber-blue/50'
+            : 'text-gray-400 hover:text-white hover:bg-space-800'
+        }`}
+      >
+        🛣️ Highway
+      </button>
+      <button
+        onClick={() => onModeChange('london')}
+        className={`px-4 py-2 text-sm font-mono rounded transition-all ${
+          currentMode === 'london'
+            ? 'bg-cyber-green/20 text-cyber-green border border-cyber-green/50'
+            : 'text-gray-400 hover:text-white hover:bg-space-800'
+        }`}
+      >
+        🇬🇧 London
+      </button>
+    </div>
+  );
+}
+
+function App() {
+  const [mode, setMode] = useState<AppMode>('london'); // Default to London
+
+  return (
+    <>
+      <ModeSelector currentMode={mode} onModeChange={setMode} />
+      {mode === 'highway' ? <HighwayMode /> : <LondonPage />}
+    </>
   );
 }
 
