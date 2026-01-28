@@ -11,6 +11,7 @@ from .engine import (
     EpisodeResult,
     StepData,
 )
+from .runner import TrainingRunner, training_runner
 
 __all__ = [
     'TrainingEngine',
@@ -18,4 +19,6 @@ __all__ = [
     'TrainingState',
     'EpisodeResult',
     'StepData',
+    'TrainingRunner',
+    'training_runner',
 ]
