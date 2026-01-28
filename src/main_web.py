@@ -191,11 +191,24 @@ def main():
     time.sleep(2)
 
     # Run simulation
-    run_simulation(
-        episodes=args.episodes,
-        max_steps=args.steps,
-        step_delay=args.delay,
-    )
+    try:
+        run_simulation(
+            episodes=args.episodes,
+            max_steps=args.steps,
+            step_delay=args.delay,
+        )
+
+        print("\n" + "="*60)
+        print("  Simulation complete!")
+        print("  Server still running. Press Ctrl+C to stop.")
+        print("="*60 + "\n")
+
+        # Keep server running - wait for keyboard interrupt
+        while True:
+            time.sleep(1)
+
+    except KeyboardInterrupt:
+        print("\nShutting down...")
 
 
 if __name__ == "__main__":
