@@ -16,3 +16,4 @@ export { TrainingHistory } from './TrainingHistory';
 export { AlgorithmSelector } from './AlgorithmSelector';
 export { HyperparameterEditor } from './HyperparameterEditor';
 export { EpisodeViewer } from './EpisodeViewer';
+export { ActionDecisionPanel } from './ActionDecisionPanel';
