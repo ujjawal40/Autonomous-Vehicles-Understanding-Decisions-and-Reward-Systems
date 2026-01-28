@@ -241,9 +241,9 @@ export function useTrainingWebSocket(wsUrl: string = 'ws://localhost:8000/api/v1
     }));
   }, []);
 
-  const sendCommand = useCallback((command: string, data?: unknown) => {
+  const sendCommand = useCallback((command: string, data?: Record<string, unknown>) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ action: command, ...data }));
+      wsRef.current.send(JSON.stringify({ action: command, ...(data || {}) }));
     }
   }, []);
 

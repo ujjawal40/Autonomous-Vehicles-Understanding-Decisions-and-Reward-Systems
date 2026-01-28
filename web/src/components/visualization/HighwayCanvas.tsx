@@ -310,7 +310,7 @@ export function HighwayCanvas({
       const y = e.clientY - rect.top;
 
       // Simple hit detection (could be improved with proper coordinate transformation)
-      const clicked = vehicles.find((v) => {
+      const clicked = vehicles.find((_v) => {
         const dx = Math.abs(x - rect.width / 2);
         const dy = Math.abs(y - rect.height / 2);
         return dx < 20 && dy < 10;
