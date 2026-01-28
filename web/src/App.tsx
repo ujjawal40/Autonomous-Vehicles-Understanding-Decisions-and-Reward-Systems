@@ -8,9 +8,10 @@ import {
   AgentTooltip,
 } from './components';
 import { LondonPage } from './components/london/LondonPage';
+import { Dashboard } from './components/dashboard';
 import { useSimulation } from './hooks/useSimulation';
 
-type AppMode = 'highway' | 'london';
+type AppMode = 'highway' | 'london' | 'dashboard';
 
 function HighwayMode() {
   const { state, isConnected } = useSimulation();
@@ -101,38 +102,52 @@ function HighwayMode() {
 
 function ModeSelector({ currentMode, onModeChange }: { currentMode: AppMode; onModeChange: (mode: AppMode) => void }) {
   return (
-    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex gap-2 bg-space-900/95 border border-space-700 rounded-lg p-1">
+    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex gap-1 bg-[--color-space-900]/95 backdrop-blur border border-white/10 rounded-lg p-1">
       <button
-        onClick={() => onModeChange('highway')}
-        className={`px-4 py-2 text-sm font-mono rounded transition-all ${
-          currentMode === 'highway'
-            ? 'bg-cyber-blue/20 text-cyber-blue border border-cyber-blue/50'
-            : 'text-gray-400 hover:text-white hover:bg-space-800'
+        onClick={() => onModeChange('dashboard')}
+        className={`px-4 py-2 text-xs font-mono uppercase tracking-wider rounded transition-all ${
+          currentMode === 'dashboard'
+            ? 'bg-[--color-cyber-blue]/20 text-[--color-cyber-blue] border border-[--color-cyber-blue]/50'
+            : 'text-white/40 hover:text-white hover:bg-white/5'
         }`}
       >
-        🛣️ Highway
+        Dashboard
       </button>
       <button
         onClick={() => onModeChange('london')}
-        className={`px-4 py-2 text-sm font-mono rounded transition-all ${
+        className={`px-4 py-2 text-xs font-mono uppercase tracking-wider rounded transition-all ${
           currentMode === 'london'
-            ? 'bg-cyber-green/20 text-cyber-green border border-cyber-green/50'
-            : 'text-gray-400 hover:text-white hover:bg-space-800'
+            ? 'bg-[--color-cyber-green]/20 text-[--color-cyber-green] border border-[--color-cyber-green]/50'
+            : 'text-white/40 hover:text-white hover:bg-white/5'
         }`}
       >
-        🇬🇧 London
+        London Map
+      </button>
+      <button
+        onClick={() => onModeChange('highway')}
+        className={`px-4 py-2 text-xs font-mono uppercase tracking-wider rounded transition-all ${
+          currentMode === 'highway'
+            ? 'bg-[--color-cyber-orange]/20 text-[--color-cyber-orange] border border-[--color-cyber-orange]/50'
+            : 'text-white/40 hover:text-white hover:bg-white/5'
+        }`}
+      >
+        Highway
       </button>
     </div>
   );
 }
 
 function App() {
-  const [mode, setMode] = useState<AppMode>('london'); // Default to London
+  const [mode, setMode] = useState<AppMode>('dashboard'); // Default to Dashboard
 
   return (
     <>
-      <ModeSelector currentMode={mode} onModeChange={setMode} />
-      {mode === 'highway' ? <HighwayMode /> : <LondonPage />}
+      {mode !== 'dashboard' && (
+        <ModeSelector currentMode={mode} onModeChange={setMode} />
+      )}
+      {mode === 'dashboard' && <Dashboard />}
+      {mode === 'london' && <LondonPage />}
+      {mode === 'highway' && <HighwayMode />}
     </>
   );
 }
