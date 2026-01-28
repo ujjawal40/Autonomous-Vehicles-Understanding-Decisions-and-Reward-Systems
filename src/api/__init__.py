@@ -1,5 +1,14 @@
-"""FastAPI WebSocket server for real-time visualization."""
+"""
+API Module
 
-from .server import app, run_server
+FastAPI servers for the Autonomous Decision Visualizer.
+"""
 
-__all__ = ["app", "run_server"]
+from .main import app
+from .training_api import router as training_router, training_manager
+
+__all__ = [
+    "app",
+    "training_router",
+    "training_manager",
+]
