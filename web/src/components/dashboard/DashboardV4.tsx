@@ -326,24 +326,90 @@ const CITY_DATA: Record<string, {
   destination: { lat: number; lng: number; name: string };
 }> = {
   london: {
-    center: { lat: 51.5137, lng: -0.1337 },
-    route: [[51.5137, -0.1337], [51.515, -0.130], [51.517, -0.125], [51.518, -0.120]],
-    destination: { lat: 51.518, lng: -0.120, name: 'Covent Garden' },
+    // Soho → Leicester Square → Covent Garden (following actual streets)
+    center: { lat: 51.5134, lng: -0.1365 },
+    route: [
+      [51.5134, -0.1365], // Start: Wardour St, Soho
+      [51.5131, -0.1355], // Wardour St south
+      [51.5128, -0.1340], // Turn east onto Old Compton St
+      [51.5126, -0.1320], // Old Compton St
+      [51.5124, -0.1300], // Approaching Charing Cross Rd
+      [51.5127, -0.1285], // Turn onto Charing Cross Rd
+      [51.5132, -0.1280], // Charing Cross Rd north
+      [51.5138, -0.1278], // Leicester Square area
+      [51.5142, -0.1275], // Continue north
+      [51.5148, -0.1268], // Cranbourn St
+      [51.5152, -0.1255], // Long Acre approach
+      [51.5108, -0.1240], // Turn onto Long Acre
+      [51.5112, -0.1225], // Long Acre east
+      [51.5115, -0.1210], // Approaching Covent Garden
+      [51.5118, -0.1205], // Covent Garden Piazza
+    ],
+    destination: { lat: 51.5118, lng: -0.1205, name: 'Covent Garden' },
   },
   nyc: {
-    center: { lat: 40.758, lng: -73.9855 },
-    route: [[40.758, -73.9855], [40.760, -73.983], [40.762, -73.980], [40.765, -73.978]],
-    destination: { lat: 40.765, lng: -73.978, name: 'Central Park' },
+    // Times Square → Bryant Park → Grand Central (following streets)
+    center: { lat: 40.7580, lng: -73.9855 },
+    route: [
+      [40.7580, -73.9855], // Start: Times Square
+      [40.7578, -73.9845], // 42nd St east
+      [40.7576, -73.9835], // Continue 42nd St
+      [40.7574, -73.9825], // 42nd St
+      [40.7572, -73.9815], // Approaching 6th Ave
+      [40.7565, -73.9815], // Turn south on 6th Ave
+      [40.7555, -73.9820], // Bryant Park west side
+      [40.7545, -73.9818], // Continue south
+      [40.7545, -73.9805], // Turn east on 40th St
+      [40.7548, -73.9790], // 40th St east
+      [40.7550, -73.9775], // Approaching Park Ave
+      [40.7555, -73.9770], // Turn north on Park Ave
+      [40.7565, -73.9768], // Park Ave north
+      [40.7575, -73.9765], // Grand Central approach
+      [40.7527, -73.9772], // Grand Central Terminal
+    ],
+    destination: { lat: 40.7527, lng: -73.9772, name: 'Grand Central' },
   },
   tokyo: {
+    // Shibuya → Harajuku (following Meiji-dori)
     center: { lat: 35.6595, lng: 139.7004 },
-    route: [[35.6595, 139.7004], [35.661, 139.702], [35.663, 139.705], [35.665, 139.708]],
-    destination: { lat: 35.665, lng: 139.708, name: 'Harajuku' },
+    route: [
+      [35.6595, 139.7004], // Start: Shibuya Crossing
+      [35.6600, 139.7000], // Shibuya station area
+      [35.6608, 139.6995], // Turn onto Meiji-dori
+      [35.6618, 139.6990], // Meiji-dori north
+      [35.6628, 139.6988], // Continue north
+      [35.6640, 139.6985], // Approaching Harajuku
+      [35.6652, 139.6982], // Harajuku south
+      [35.6665, 139.6980], // Cat Street area
+      [35.6678, 139.6978], // Near Takeshita St
+      [35.6690, 139.6975], // Harajuku Station approach
+      [35.6702, 139.7025], // Turn east towards Meiji Shrine
+      [35.6710, 139.7030], // Meiji Shrine entrance
+      [35.6715, 139.7035], // Harajuku area
+    ],
+    destination: { lat: 35.6715, lng: 139.7035, name: 'Meiji Shrine' },
   },
   mumbai: {
-    center: { lat: 19.076, lng: 72.8777 },
-    route: [[19.076, 72.8777], [19.078, 72.880], [19.080, 72.883], [19.082, 72.886]],
-    destination: { lat: 19.082, lng: 72.886, name: 'Marine Drive' },
+    // CST → Marine Drive (following actual roads)
+    center: { lat: 19.0760, lng: 72.8777 },
+    route: [
+      [19.0760, 72.8777], // Start: CST Station
+      [19.0755, 72.8770], // DN Road south
+      [19.0748, 72.8762], // Continue south
+      [19.0740, 72.8755], // Flora Fountain area
+      [19.0732, 72.8748], // Turn west
+      [19.0725, 72.8735], // Veer Nariman Rd
+      [19.0720, 72.8720], // Continue west
+      [19.0718, 72.8705], // Approaching Churchgate
+      [19.0715, 72.8690], // Churchgate station
+      [19.0710, 72.8675], // Marine Drive approach
+      [19.0705, 72.8660], // Marine Drive start
+      [19.0698, 72.8645], // Marine Drive south
+      [19.0690, 72.8630], // Continue along coast
+      [19.0680, 72.8620], // Marine Drive
+      [19.0670, 72.8615], // Nariman Point approach
+    ],
+    destination: { lat: 19.0670, lng: 72.8615, name: 'Nariman Point' },
   },
 };
 
@@ -363,10 +429,24 @@ function getCityVehicle(city: string, speed: number, progress: number) {
   const lat = start[0] + (end[0] - start[0]) * segmentProgress;
   const lng = start[1] + (end[1] - start[1]) * segmentProgress;
 
-  // Calculate heading based on direction
-  const heading = Math.atan2(end[1] - start[1], end[0] - start[0]) * (180 / Math.PI) + 90;
+  // Calculate heading based on direction (lat/lng to degrees)
+  const dLat = end[0] - start[0];
+  const dLng = end[1] - start[1];
+  const heading = Math.atan2(dLng, dLat) * (180 / Math.PI);
 
-  return { lat, lng, heading, speed };
+  // Check if turning (compare with previous segment)
+  let isTurning = false;
+  if (segmentIndex > 0) {
+    const prevStart = route[segmentIndex - 1];
+    const prevHeading = Math.atan2(start[1] - prevStart[1], start[0] - prevStart[0]) * (180 / Math.PI);
+    const headingDiff = Math.abs(heading - prevHeading);
+    isTurning = headingDiff > 15;
+  }
+
+  // Slow down when turning
+  const adjustedSpeed = isTurning ? speed * 0.5 : speed;
+
+  return { lat, lng, heading, speed: adjustedSpeed };
 }
 
 function getCityRoute(city: string) {
@@ -468,8 +548,11 @@ export function DashboardV4() {
         epsilon: Math.max(0.01, m.epsilon - 0.0001),
       }));
 
-      // Update route progress for city maps
-      setRouteProgress(p => (p + 0.5) % 100);
+      // Update route progress - varies based on speed/action
+      const progressIncrement = selectedAction === 'brake' ? 0.2 :
+                                selectedAction === 'hold' ? 0.5 :
+                                selectedAction === 'accel' ? 1.2 : 0.8;
+      setRouteProgress(p => (p + progressIncrement) % 100);
 
       // Update episode reward
       const stepReward = (Math.random() - 0.3) * 2;
