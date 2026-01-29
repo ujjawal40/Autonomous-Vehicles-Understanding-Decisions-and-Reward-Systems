@@ -21,3 +21,4 @@ export { RewardBreakdownPanel } from './RewardBreakdownPanel';
 export { VehicleStatePanel } from './VehicleStatePanel';
 export { DecisionFeed } from './DecisionFeed';
 export { DashboardV2 } from './DashboardV2';
+export { DashboardV3 } from './DashboardV3';

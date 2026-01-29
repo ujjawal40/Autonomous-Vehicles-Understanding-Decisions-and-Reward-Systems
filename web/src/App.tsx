@@ -8,7 +8,7 @@ import {
   AgentTooltip,
 } from './components';
 import { LondonPage } from './components/london/LondonPage';
-import { DashboardV2 } from './components/dashboard';
+import { DashboardV3 } from './components/dashboard';
 import { useSimulation } from './hooks/useSimulation';
 
 type AppMode = 'highway' | 'london' | 'dashboard';
@@ -145,7 +145,7 @@ function App() {
       {mode !== 'dashboard' && (
         <ModeSelector currentMode={mode} onModeChange={setMode} />
       )}
-      {mode === 'dashboard' && <DashboardV2 />}
+      {mode === 'dashboard' && <DashboardV3 />}
       {mode === 'london' && <LondonPage />}
       {mode === 'highway' && <HighwayMode />}
     </>
