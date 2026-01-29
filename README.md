@@ -10,12 +10,15 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-black?style=for-the-badge&logo=postgresql&logoColor=white)](https://postgresql.org)
 [![Docker](https://img.shields.io/badge/Docker-Ready-black?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
 [![License](https://img.shields.io/badge/License-MIT-black?style=for-the-badge)](LICENSE)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-View_Now-00d4ff?style=for-the-badge&logo=vercel&logoColor=white)](https://advs.vercel.app)
 
 <br/>
 
 **An interactive platform for visualizing how reinforcement learning agents make decisions.**
 
 **See the reward functions. Understand the tradeoffs. Watch the AI think.**
+
+### [🚀 Try the Live Demo](https://advs.vercel.app)
 
 [Features](#-features) • [Quick Start](#-quick-start) • [Architecture](#-system-architecture) • [Documentation](#-documentation) • [Contributing](#-contributing)
 
@@ -29,12 +32,28 @@
 
 Ever wondered **how self-driving cars make decisions**? This project lets you:
 
-- 🗺️ **Watch an AI navigate real London streets** using OpenStreetMap data
-- 🧠 **See exactly why it makes each decision** with reward breakdowns
-- 📊 **Visualize probability distributions** in real-time 3D
-- ⚙️ **Design your own reward functions** and see how behavior changes
-- 📈 **Compare different RL algorithms** (DQN, Double DQN, PPO, A2C)
-- 💾 **Store and analyze training runs** with PostgreSQL
+- 🗺️ **Watch an AI navigate real city streets** in London, NYC, Tokyo, or Mumbai
+- 🧠 **See the neural network "thinking"** with animated decision flow
+- 📊 **Visualize action probabilities** updating in real-time
+- ⚙️ **Customize reward functions** with formulas and see behavior changes
+- 📈 **Compare RL algorithms** (DQN, Double DQN, PPO, A2C, SAC)
+- 🎯 **Set custom waypoints** by clicking on the map
+- 📍 **Watch cars follow real roads** using OSRM routing
+
+---
+
+## 🎮 Try It Out!
+
+**[Launch the Live Demo →](https://advs.vercel.app)**
+
+Here's what you can do:
+
+1. **Switch Cities** — Toggle between London, NYC, Tokyo, and Mumbai
+2. **Adjust Rewards** — Drag the sliders to change speed, safety, progress, comfort, and traffic rule weights
+3. **Watch Neural Flow** — See animated particles flow through the network as decisions are made
+4. **Click to Set Waypoints** — Click "Set Start" or "Set End", then click on the map
+5. **Train & Observe** — Hit "Apply & Retrain" to see how different reward weights affect behavior
+6. **Compare Algorithms** — Switch between DQN, PPO, A2C, and more
 
 ---
 
@@ -85,21 +104,34 @@ Ever wondered **how self-driving cars make decisions**? This project lets you:
 
 ## ✨ Features
 
-### 🗺️ Real-Time Navigation Visualization
-Watch the AI agent navigate through **240+ real intersections** in London's Soho district, with live path tracking and optimal route comparison.
+### 🗺️ Multi-City Navigation
+Navigate through real streets in **4 major cities**:
+- **London** — Central London streets
+- **New York** — Times Square area
+- **Tokyo** — Shibuya district
+- **Mumbai** — South Mumbai
 
-### 🌋 3D Probability Volcano
-Four visualization modes for action probabilities:
-- **Real-time** — Current decision as a spike
-- **Animated** — Last N steps flowing
-- **Episode Surface** — Full episode as terrain
-- **Stacked Episodes** — Learning evolution over time
+Routes follow actual roads using OSRM routing engine.
 
-### ⚙️ Custom Reward Functions
-Design rewards your way:
-- **Slider Mode** — Adjust weights visually
-- **Code Editor** — Write custom Python logic
-- **Presets** — Save and share configurations
+### 🧠 Neural Flow Visualization
+Watch the AI "think" in real-time:
+- **Animated particles** flowing through the network
+- **State inputs** → Hidden layers → **Action outputs**
+- **Probability rings** showing confidence for each action
+- **Selected action** pulses and glows
+
+### ⚙️ Customizable Reward Functions
+Design rewards with full control:
+- **5 reward components** — Speed, Safety, Progress, Comfort, Traffic Rules
+- **Visual sliders** with custom min/max ranges
+- **Formulas displayed** — See exactly how rewards are calculated
+- **Apply & Retrain** — Watch behavior change in real-time
+
+### 🎯 Interactive Waypoints
+- **Click "Set Start"** then click on the map
+- **Click "Set End"** to set destination
+- Watch the car navigate the route
+- Routes follow real roads, not straight lines
 
 ### 🤖 Multiple RL Algorithms
 Compare how different algorithms learn:
@@ -110,21 +142,15 @@ Compare how different algorithms learn:
 | Double DQN | Value-based | Reduced overestimation |
 | PPO | Policy-based | Robust performance |
 | A2C | Actor-Critic | Fast iteration |
+| SAC | Actor-Critic | Sample efficiency |
 
-### 📊 Comprehensive Metrics
-Track everything:
-- Cumulative reward curves
-- Success rate over time
-- Path efficiency
-- Q-value distributions
-- Risk/reward ratios
-- Exploration decay
-
-### 💾 Training History
-- Store runs in PostgreSQL
-- Compare multiple experiments
-- Export data (CSV, JSON)
-- Resume from checkpoints
+### 📊 Real-Time Metrics
+Live updates as training progresses:
+- Episode counter
+- Step counter
+- Dynamic probability bars
+- Current total reward
+- Risk level indicator
 
 ---
 
@@ -216,12 +242,13 @@ env.set_reward_function(my_reward)
 
 | Layer | Technology |
 |-------|------------|
-| **Frontend** | React 19, TypeScript, Three.js, Tailwind CSS |
-| **Backend** | Python 3.11, FastAPI, Gymnasium |
-| **Database** | PostgreSQL 16, SQLAlchemy |
-| **RL Algorithms** | Custom implementations (DQN, PPO, A2C) |
-| **Maps** | OpenStreetMap via OSMnx |
-| **Infrastructure** | Docker, Docker Compose |
+| **Frontend** | React 19, TypeScript, Tailwind CSS, Vite |
+| **Maps** | Leaflet + CartoDB Dark Matter tiles |
+| **Routing** | OSRM (Open Source Routing Machine) |
+| **Visualization** | HTML5 Canvas (Neural Flow, Highway2D) |
+| **Deployment** | Vercel |
+| **Backend** (planned) | Python 3.11, FastAPI, Gymnasium |
+| **Database** (planned) | PostgreSQL 16, SQLAlchemy |
 
 ---
 
@@ -248,30 +275,36 @@ env.set_reward_function(my_reward)
 - [x] Real-time WebSocket updates
 - [x] React frontend with dark theme
 
-### Phase 2: Database & Training Controls 🚧
+### Phase 2: Interactive Dashboard ✅
+- [x] Multi-city support (London, NYC, Tokyo, Mumbai)
+- [x] Neural flow visualization (animated decision network)
+- [x] Custom reward function editor with sliders
+- [x] Reward formulas with custom ranges
+- [x] Click-to-set waypoints on map
+- [x] Real road routing via OSRM
+- [x] Training controls (Start/Stop/Apply & Retrain)
+- [x] Episode and step tracking
+- [x] Algorithm selector (DQN, Double DQN, PPO, A2C, SAC)
+- [x] Live probability updates
+- [x] Vercel deployment
+
+### Phase 3: Backend Integration 🚧
 - [ ] PostgreSQL + Docker setup
-- [ ] Training start/stop/pause controls
-- [ ] Episode configuration
-- [ ] Custom reward editor (sliders + code)
-- [ ] Reward presets
+- [ ] Real training loop integration
+- [ ] WebSocket live updates from actual training
+- [ ] Checkpoint save/load
 
-### Phase 3: Advanced Algorithms
-- [ ] Double DQN implementation
-- [ ] PPO implementation
-- [ ] A2C implementation
-- [ ] Algorithm comparison tools
+### Phase 4: Advanced Features
+- [ ] Training history graphs
+- [ ] Episode comparison tools
+- [ ] Export/import configurations
+- [ ] Multi-agent scenarios
 
-### Phase 4: Visualization Upgrade
-- [ ] 3D probability volcano (Three.js)
-- [ ] Risk/reward gauge
-- [ ] Training history browser
-- [ ] Multi-run comparison
-
-### Phase 5: Expansion
-- [ ] Additional city maps
-- [ ] Model export/import
-- [ ] API documentation
+### Phase 5: Polish
+- [ ] Mobile responsive design
 - [ ] Performance optimizations
+- [ ] Comprehensive documentation
+- [ ] Tutorial mode
 
 ---
 
@@ -285,6 +318,33 @@ env.set_reward_function(my_reward)
 | [Algorithms](docs/algorithms.md) | RL algorithm explanations |
 | [API Reference](docs/api.md) | REST & WebSocket APIs |
 | [Contributing](CONTRIBUTING.md) | How to contribute |
+
+---
+
+## 💬 Feedback Wanted!
+
+This project is actively seeking feedback on:
+
+### 🎨 UI/UX Improvements
+- Is the dashboard intuitive? What's confusing?
+- Are the visualizations helpful for understanding RL?
+- What information would you want to see that's missing?
+- Mobile responsiveness suggestions
+
+### 🧠 RL Implementation
+- More sophisticated algorithms (TD3, SAC with priority replay)
+- Real training integration (currently simulated)
+- Better state representations
+- Multi-agent scenarios
+- Curriculum learning visualization
+
+### 📊 New Features
+- Export training configs and share with others
+- Record and playback episodes
+- A/B testing different reward functions
+- Integration with actual RL training frameworks
+
+**[Open an Issue](https://github.com/ujjawal40/Autonomous-Vehicles-Understanding-Decisions-and-Reward-Systems/issues/new)** with your thoughts!
 
 ---
 
