@@ -5,3 +5,6 @@
  */
 
 export { HighwayCanvas } from './HighwayCanvas';
+export { NeuralFlowViz } from './NeuralFlowViz';
+export { Highway2D } from './Highway2D';
+export { CityMap } from './CityMap';
