@@ -4,7 +4,7 @@
  * Complete RL visualization with neural flow, highway/city maps, and dynamic updates.
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   Play,
   Pause,
@@ -53,6 +53,9 @@ interface RewardConfig {
   id: string;
   name: string;
   value: number;
+  min: number;
+  max: number;
+  formula: string;
   description: string;
 }
 
@@ -196,25 +199,30 @@ function RewardConfiguration({
     <div className="space-y-3">
       <h3 className="text-[10px] text-white/40 uppercase tracking-widest flex items-center gap-1">
         <Target size={10} />
-        Reward Configuration
+        Reward Function
       </h3>
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         {rewards.map(reward => (
-          <div key={reward.id} className="space-y-1">
+          <div key={reward.id} className="p-2 bg-white/5 rounded-lg space-y-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-white/70">{reward.name}</span>
-              <span className="text-xs font-mono text-[#00d4ff]">{reward.value.toFixed(1)}</span>
+              <span className="text-xs font-medium text-white/80">{reward.name}</span>
+              <span className={`text-xs font-mono ${reward.value >= 0 ? 'text-[#00ff88]' : 'text-[#ff6b35]'}`}>
+                {reward.value >= 0 ? '+' : ''}{reward.value.toFixed(1)}
+              </span>
+            </div>
+            <div className="text-[9px] font-mono text-[#00d4ff]/70 bg-black/30 px-1.5 py-0.5 rounded">
+              {reward.formula}
             </div>
             <input
               type="range"
-              min="-2"
-              max="2"
-              step="0.1"
+              min={reward.min}
+              max={reward.max}
+              step="0.5"
               value={reward.value}
               onChange={(e) => onChange(reward.id, parseFloat(e.target.value))}
               disabled={disabled}
-              className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer
+              className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer
                 [&::-webkit-slider-thumb]:appearance-none
                 [&::-webkit-slider-thumb]:w-3
                 [&::-webkit-slider-thumb]:h-3
@@ -223,7 +231,11 @@ function RewardConfiguration({
                 [&::-webkit-slider-thumb]:shadow-[0_0_10px_#00d4ff]
                 disabled:opacity-50"
             />
-            <p className="text-[9px] text-white/30">{reward.description}</p>
+            <div className="flex justify-between text-[8px] text-white/30">
+              <span>{reward.min}</span>
+              <span>{reward.description}</span>
+              <span>{reward.max}</span>
+            </div>
           </div>
         ))}
       </div>
@@ -412,27 +424,51 @@ export function DashboardV4() {
   const [showEpisodeComplete, setShowEpisodeComplete] = useState(false);
   const [currentRoute, setCurrentRoute] = useState<[number, number][]>([]);
   const [routeLoading, setRouteLoading] = useState(true);
+  const [customStart, setCustomStart] = useState<{ lat: number; lng: number } | null>(null);
+  const [customEnd, setCustomEnd] = useState<{ lat: number; lng: number } | null>(null);
+  const [settingWaypoint, setSettingWaypoint] = useState<'start' | 'end' | null>(null);
+  const lastEpisodeStep = useRef(0);
 
-  // Fetch route when environment changes
+  // Fetch route when environment changes or custom endpoints set
   useEffect(() => {
     const endpoints = CITY_ENDPOINTS[environment];
     if (!endpoints) return;
 
+    const start = customStart || endpoints.start;
+    const end = customEnd || endpoints.end;
+
     setRouteLoading(true);
     setRouteProgress(0);
 
-    fetchRoute(endpoints.start, endpoints.end).then(route => {
+    fetchRoute(start, end).then(route => {
       setCurrentRoute(route);
       setRouteLoading(false);
     });
-  }, [environment]);
+  }, [environment, customStart, customEnd]);
+
+  // Handle map click for setting waypoints
+  const handleMapClick = useCallback((lat: number, lng: number) => {
+    if (settingWaypoint === 'start') {
+      setCustomStart({ lat, lng });
+      setSettingWaypoint('end');
+    } else if (settingWaypoint === 'end') {
+      setCustomEnd({ lat, lng });
+      setSettingWaypoint(null);
+    }
+  }, [settingWaypoint]);
+
+  const resetWaypoints = useCallback(() => {
+    setCustomStart(null);
+    setCustomEnd(null);
+    setSettingWaypoint(null);
+  }, []);
 
   const [rewards, setRewards] = useState<RewardConfig[]>([
-    { id: 'speed', name: 'Speed Optimization', value: 1.0, description: 'Reward for maintaining target velocity' },
-    { id: 'safety', name: 'Safety Distance', value: 2.0, description: 'Penalty for proximity to obstacles' },
-    { id: 'lane', name: 'Lane Discipline', value: 0.5, description: 'Reward for lane centering' },
-    { id: 'efficiency', name: 'Route Efficiency', value: 0.3, description: 'Bonus for optimal path selection' },
-    { id: 'comfort', name: 'Ride Comfort', value: 0.2, description: 'Penalty for sudden maneuvers' },
+    { id: 'speed', name: 'Speed', value: 3.0, min: 0, max: 10, formula: 'r = w × (v / v_target)', description: 'Reward for maintaining target velocity' },
+    { id: 'safety', name: 'Safety', value: -5.0, min: -10, max: 0, formula: 'r = w × (1 / d_obstacle)', description: 'Penalty for proximity to obstacles' },
+    { id: 'progress', name: 'Progress', value: 2.0, min: 0, max: 5, formula: 'r = w × Δd_goal', description: 'Reward for moving toward destination' },
+    { id: 'comfort', name: 'Comfort', value: -1.0, min: -5, max: 0, formula: 'r = w × |Δa| + |Δω|', description: 'Penalty for sudden acceleration/steering' },
+    { id: 'traffic', name: 'Traffic Rules', value: -8.0, min: -10, max: 0, formula: 'r = w × violations', description: 'Penalty for red lights, wrong way' },
   ]);
 
   const [probabilities, setProbabilities] = useState<ActionProbability[]>([
@@ -513,9 +549,11 @@ export function DashboardV4() {
     return () => clearInterval(interval);
   }, [status, selectedAction]);
 
-  // Episode progression
+  // Episode progression (with ref to prevent double counting)
   useEffect(() => {
-    if (step > 0 && step % 200 === 0 && status === 'training') {
+    if (step > 0 && step % 200 === 0 && status === 'training' && step !== lastEpisodeStep.current) {
+      lastEpisodeStep.current = step;
+
       // Save episode reward to history
       setRewardHistory(h => [...h.slice(-49), episodeReward]);
       setEpisodeReward(0);
@@ -678,8 +716,53 @@ export function DashboardV4() {
 
         {/* Center - Visualization */}
         <div className="flex-1 flex flex-col p-3 gap-3">
+          {/* Waypoint Controls */}
+          <div className="flex items-center gap-2 text-xs">
+            <button
+              onClick={() => setSettingWaypoint('start')}
+              disabled={status === 'training'}
+              className={`px-3 py-1.5 rounded flex items-center gap-1 transition-all ${
+                settingWaypoint === 'start'
+                  ? 'bg-[#00ff88] text-black'
+                  : customStart
+                  ? 'bg-[#00ff88]/20 text-[#00ff88] border border-[#00ff88]/50'
+                  : 'bg-white/10 text-white/70 hover:bg-white/20'
+              } disabled:opacity-50`}
+            >
+              <MapPin size={12} />
+              {customStart ? 'Start ✓' : 'Set Start'}
+            </button>
+            <button
+              onClick={() => setSettingWaypoint('end')}
+              disabled={status === 'training' || !customStart}
+              className={`px-3 py-1.5 rounded flex items-center gap-1 transition-all ${
+                settingWaypoint === 'end'
+                  ? 'bg-[#ff6b35] text-black'
+                  : customEnd
+                  ? 'bg-[#ff6b35]/20 text-[#ff6b35] border border-[#ff6b35]/50'
+                  : 'bg-white/10 text-white/70 hover:bg-white/20'
+              } disabled:opacity-50`}
+            >
+              <Target size={12} />
+              {customEnd ? 'End ✓' : 'Set End'}
+            </button>
+            {(customStart || customEnd) && (
+              <button
+                onClick={resetWaypoints}
+                className="px-2 py-1.5 text-white/50 hover:text-white"
+              >
+                <RotateCcw size={12} />
+              </button>
+            )}
+            {settingWaypoint && (
+              <span className="text-[#ffcc00] animate-pulse ml-2">
+                Click on map to set {settingWaypoint} point
+              </span>
+            )}
+          </div>
+
           {/* City Map */}
-          <div className="flex-1 relative rounded-lg overflow-hidden border border-white/10">
+          <div className={`flex-1 relative rounded-lg overflow-hidden border ${settingWaypoint ? 'border-[#ffcc00]' : 'border-white/10'}`}>
             {routeLoading ? (
               <div className="absolute inset-0 flex items-center justify-center bg-[#0a0a0f]">
                 <div className="flex flex-col items-center gap-3">
@@ -692,8 +775,9 @@ export function DashboardV4() {
                 city={environment}
                 vehicle={getVehicleOnRoute(currentRoute, routeProgress, egoSpeed)}
                 route={currentRoute}
-                destination={CITY_ENDPOINTS[environment] ? { ...CITY_ENDPOINTS[environment].end, name: CITY_ENDPOINTS[environment].destName } : undefined}
+                destination={customEnd ? { ...customEnd, name: 'Custom Destination' } : (CITY_ENDPOINTS[environment] ? { ...CITY_ENDPOINTS[environment].end, name: CITY_ENDPOINTS[environment].destName } : undefined)}
                 isSimulating={status === 'training'}
+                onPositionClick={settingWaypoint ? handleMapClick : undefined}
               />
             )}
             {showEpisodeComplete && <EpisodeCompleteOverlay episode={episode} reward={rewardHistory[rewardHistory.length - 1] || 0} />}

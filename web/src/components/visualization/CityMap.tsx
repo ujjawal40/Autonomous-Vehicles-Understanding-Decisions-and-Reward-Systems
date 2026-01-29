@@ -73,6 +73,7 @@ export function CityMap({
   destination,
   route = [],
   isSimulating = false,
+  onPositionClick,
 }: CityMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
@@ -145,6 +146,13 @@ export function CityMap({
           .addTo(mapRef.current);
 
         leaflet.control.zoom({ position: 'bottomright' }).addTo(mapRef.current);
+
+        // Click handler for setting waypoints
+        if (onPositionClick) {
+          mapRef.current.on('click', (e: any) => {
+            onPositionClick(e.latlng.lat, e.latlng.lng);
+          });
+        }
 
         setMapLoaded(true);
       } catch (err) {
