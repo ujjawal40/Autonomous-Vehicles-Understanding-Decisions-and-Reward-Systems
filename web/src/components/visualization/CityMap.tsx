@@ -172,36 +172,30 @@ export function CityMap({
 
     const L = (window as any).L;
 
-    // Create custom vehicle icon
+    // Create custom vehicle icon - larger and more visible
     const vehicleIcon = L.divIcon({
       className: 'vehicle-marker',
       html: `
         <div style="
           transform: rotate(${vehicle.heading}deg);
-          width: 40px;
-          height: 40px;
+          width: 50px;
+          height: 50px;
           display: flex;
           align-items: center;
           justify-content: center;
+          filter: drop-shadow(0 0 15px #00d4ff);
         ">
-          <svg viewBox="0 0 100 100" width="40" height="40">
-            <defs>
-              <filter id="glow">
-                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                <feMerge>
-                  <feMergeNode in="coloredBlur"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
-            </defs>
-            <path d="M50 10 L70 40 L70 80 Q70 90 50 90 Q30 90 30 80 L30 40 Z"
-                  fill="#00d4ff" filter="url(#glow)"/>
-            <circle cx="50" cy="30" r="8" fill="rgba(255,255,255,0.5)"/>
+          <svg viewBox="0 0 100 100" width="50" height="50">
+            <circle cx="50" cy="50" r="45" fill="rgba(0,212,255,0.2)" stroke="#00d4ff" stroke-width="2"/>
+            <path d="M50 15 L65 40 L65 75 Q65 85 50 85 Q35 85 35 75 L35 40 Z"
+                  fill="#00d4ff"/>
+            <circle cx="50" cy="32" r="6" fill="white"/>
+            <rect x="40" y="55" width="20" height="3" rx="1" fill="rgba(255,255,255,0.6)"/>
           </svg>
         </div>
       `,
-      iconSize: [40, 40],
-      iconAnchor: [20, 20],
+      iconSize: [50, 50],
+      iconAnchor: [25, 25],
     });
 
     if (vehicleMarkerRef.current) {

@@ -286,34 +286,6 @@ export function Highway2D({
       // Draw ego vehicle
       drawCar(ctx, egoX, egoY, carWidth * 1.1, carHeight * 1.1, '#00d4ff', true, false);
 
-      // Speed indicator
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-      ctx.beginPath();
-      ctx.roundRect(dimensions.width - 100, 20, 80, 50, 8);
-      ctx.fill();
-
-      ctx.fillStyle = '#00d4ff';
-      ctx.font = 'bold 20px "Space Grotesk", sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(`${egoSpeed}`, dimensions.width - 60, 48);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-      ctx.font = '10px "Space Grotesk", sans-serif';
-      ctx.fillText('km/h', dimensions.width - 60, 62);
-
-      // Lane indicator
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-      ctx.beginPath();
-      ctx.roundRect(20, 20, 80, 40, 8);
-      ctx.fill();
-
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-      ctx.font = '10px "Space Grotesk", sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('LANE', 60, 35);
-      ctx.fillStyle = '#00ff88';
-      ctx.font = 'bold 16px "Space Grotesk", sans-serif';
-      ctx.fillText(`${egoLane + 1} / ${lanes}`, 60, 52);
-
       animationRef.current = requestAnimationFrame(animate);
     };
 

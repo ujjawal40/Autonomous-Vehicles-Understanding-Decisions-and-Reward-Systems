@@ -21,6 +21,7 @@ import {
   RefreshCw,
   MapPin,
   Layers,
+  Download,
 } from 'lucide-react';
 import { NeuralFlowViz } from '../visualization/NeuralFlowViz';
 import { Highway2D } from '../visualization/Highway2D';
@@ -262,6 +263,62 @@ function MetricBox({ label, value, highlight }: { label: string; value: string; 
 }
 
 // ============================================
+// TRAINING HISTORY GRAPH
+// ============================================
+
+function TrainingHistory({ data, currentReward }: { data: number[]; currentReward: number }) {
+  const maxVal = Math.max(...data, currentReward, 10);
+  const minVal = Math.min(...data, currentReward, -10);
+  const range = maxVal - minVal || 1;
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] text-white/40 uppercase tracking-widest">Reward History</span>
+        <span className="text-xs font-mono text-[#00ff88]">{currentReward.toFixed(1)}</span>
+      </div>
+      <div className="h-16 flex items-end gap-[2px]">
+        {data.map((val, i) => {
+          const height = ((val - minVal) / range) * 100;
+          const isPositive = val >= 0;
+          return (
+            <div
+              key={i}
+              className="flex-1 rounded-t transition-all"
+              style={{
+                height: `${Math.max(2, height)}%`,
+                backgroundColor: isPositive ? '#00ff88' : '#ff3366',
+                opacity: 0.3 + (i / data.length) * 0.7,
+              }}
+            />
+          );
+        })}
+      </div>
+      <div className="flex justify-between text-[8px] text-white/30">
+        <span>-{data.length} ep</span>
+        <span>now</span>
+      </div>
+    </div>
+  );
+}
+
+// ============================================
+// EPISODE COMPLETE ANIMATION
+// ============================================
+
+function EpisodeCompleteOverlay({ episode, reward }: { episode: number; reward: number }) {
+  return (
+    <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-50 animate-pulse">
+      <div className="text-center">
+        <div className="text-6xl font-bold text-[#00ff88] mb-2">Episode {episode}</div>
+        <div className="text-2xl text-white/70">Complete</div>
+        <div className="text-lg text-[#00d4ff] mt-2">Reward: {reward.toFixed(1)}</div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================
 // HELPERS
 // ============================================
 
@@ -292,9 +349,26 @@ const CITY_DATA: Record<string, {
   },
 };
 
-function getCityVehicle(city: string, speed: number) {
+function getCityVehicle(city: string, speed: number, progress: number) {
   const data = CITY_DATA[city] || CITY_DATA.london;
-  return { lat: data.center.lat, lng: data.center.lng, heading: 45, speed };
+  const route = data.route;
+
+  // Interpolate position along route based on progress
+  const totalSegments = route.length - 1;
+  const progressNorm = (progress / 100) * totalSegments;
+  const segmentIndex = Math.min(Math.floor(progressNorm), totalSegments - 1);
+  const segmentProgress = progressNorm - segmentIndex;
+
+  const start = route[segmentIndex];
+  const end = route[Math.min(segmentIndex + 1, route.length - 1)];
+
+  const lat = start[0] + (end[0] - start[0]) * segmentProgress;
+  const lng = start[1] + (end[1] - start[1]) * segmentProgress;
+
+  // Calculate heading based on direction
+  const heading = Math.atan2(end[1] - start[1], end[0] - start[0]) * (180 / Math.PI) + 90;
+
+  return { lat, lng, heading, speed };
 }
 
 function getCityRoute(city: string) {
@@ -323,6 +397,10 @@ export function DashboardV4() {
   const [egoSpeed, setEgoSpeed] = useState(80);
   const [egoLane, setEgoLane] = useState(1);
   const [selectedAction, setSelectedAction] = useState('accel');
+  const [routeProgress, setRouteProgress] = useState(0);
+  const [rewardHistory, setRewardHistory] = useState<number[]>([]);
+  const [episodeReward, setEpisodeReward] = useState(0);
+  const [showEpisodeComplete, setShowEpisodeComplete] = useState(false);
 
   const [rewards, setRewards] = useState<RewardConfig[]>([
     { id: 'speed', name: 'Speed Optimization', value: 1.0, description: 'Reward for maintaining target velocity' },
@@ -399,6 +477,13 @@ export function DashboardV4() {
         epsilon: Math.max(0.01, m.epsilon - 0.0001),
       }));
 
+      // Update route progress for city maps
+      setRouteProgress(p => (p + 0.5) % 100);
+
+      // Update episode reward
+      const stepReward = (Math.random() - 0.3) * 2;
+      setEpisodeReward(r => r + stepReward);
+
       // Update step/episode
       setStep(s => s + 1);
     }, 200);
@@ -409,14 +494,40 @@ export function DashboardV4() {
   // Episode progression
   useEffect(() => {
     if (step > 0 && step % 200 === 0 && status === 'training') {
+      // Save episode reward to history
+      setRewardHistory(h => [...h.slice(-49), episodeReward]);
+      setEpisodeReward(0);
+      setRouteProgress(0);
+
+      // Show episode complete animation
+      setShowEpisodeComplete(true);
+      setTimeout(() => setShowEpisodeComplete(false), 1000);
+
       setEpisode(e => Math.min(e + 1, totalEpisodes));
     }
-  }, [step, status, totalEpisodes]);
+  }, [step, status, totalEpisodes, episodeReward]);
 
   const handleRewardChange = useCallback((id: string, value: number) => {
     setRewards(prev => prev.map(r => r.id === id ? { ...r, value } : r));
     setRewardsChanged(true);
   }, []);
+
+  const handleExportConfig = useCallback(() => {
+    const config = {
+      environment,
+      algorithm,
+      totalEpisodes,
+      rewards: rewards.reduce((acc, r) => ({ ...acc, [r.id]: r.value }), {}),
+      timestamp: new Date().toISOString(),
+    };
+    const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `adv-config-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [environment, algorithm, totalEpisodes, rewards]);
 
   const isCity = environment !== 'highway';
 
@@ -551,7 +662,7 @@ export function DashboardV4() {
             {isCity ? (
               <CityMap
                 city={environment}
-                vehicle={getCityVehicle(environment, egoSpeed)}
+                vehicle={getCityVehicle(environment, egoSpeed, routeProgress)}
                 route={getCityRoute(environment)}
                 destination={getCityDestination(environment)}
                 isSimulating={status === 'training'}
@@ -564,6 +675,7 @@ export function DashboardV4() {
                 isSimulating={status === 'training'}
               />
             )}
+            {showEpisodeComplete && <EpisodeCompleteOverlay episode={episode} reward={rewardHistory[rewardHistory.length - 1] || 0} />}
           </div>
 
           {/* Neural Flow */}
@@ -619,7 +731,7 @@ export function DashboardV4() {
           </div>
 
           {/* Risk */}
-          <div className="p-3">
+          <div className="p-3 border-b border-white/5">
             <div className="text-[10px] text-white/40 uppercase tracking-widest mb-2 flex items-center gap-1">
               <AlertTriangle size={10} />
               Risk
@@ -631,6 +743,22 @@ export function DashboardV4() {
             <div className="h-2 bg-white/10 rounded-full overflow-hidden">
               <div className="h-full w-[20%] bg-gradient-to-r from-[#00ff88] to-[#ffcc00] rounded-full" />
             </div>
+          </div>
+
+          {/* Training History */}
+          <div className="p-3 border-b border-white/5">
+            <TrainingHistory data={rewardHistory} currentReward={episodeReward} />
+          </div>
+
+          {/* Export */}
+          <div className="p-3">
+            <button
+              onClick={handleExportConfig}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded text-sm transition-all"
+            >
+              <Download size={14} />
+              Export Config
+            </button>
           </div>
         </div>
       </div>
