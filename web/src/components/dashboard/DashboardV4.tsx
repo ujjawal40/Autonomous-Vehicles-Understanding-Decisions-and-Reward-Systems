@@ -24,7 +24,6 @@ import {
   Download,
 } from 'lucide-react';
 import { NeuralFlowViz } from '../visualization/NeuralFlowViz';
-import { Highway2D } from '../visualization/Highway2D';
 import { CityMap } from '../visualization/CityMap';
 
 // ============================================
@@ -62,7 +61,6 @@ interface RewardConfig {
 // ============================================
 
 const ENVIRONMENTS = [
-  { id: 'highway', name: 'Highway', type: 'simulation', complexity: 'Medium' },
   { id: 'london', name: 'London', type: 'city', complexity: 'High' },
   { id: 'nyc', name: 'New York', type: 'city', complexity: 'Very High' },
   { id: 'tokyo', name: 'Tokyo', type: 'city', complexity: 'Extreme' },
@@ -385,7 +383,7 @@ function getCityDestination(city: string) {
 
 export function DashboardV4() {
   // State
-  const [environment, setEnvironment] = useState('highway');
+  const [environment, setEnvironment] = useState('london');
   const [algorithm, setAlgorithm] = useState('DQN');
   const [status, setStatus] = useState<'idle' | 'training' | 'paused'>('idle');
   const [episode, setEpisode] = useState(0);
@@ -395,7 +393,6 @@ export function DashboardV4() {
 
   // Dynamic simulation state
   const [egoSpeed, setEgoSpeed] = useState(80);
-  const [egoLane, setEgoLane] = useState(1);
   const [selectedAction, setSelectedAction] = useState('accel');
   const [routeProgress, setRouteProgress] = useState(0);
   const [rewardHistory, setRewardHistory] = useState<number[]>([]);
@@ -461,12 +458,6 @@ export function DashboardV4() {
         return s + (Math.random() - 0.5) * 2;
       });
 
-      setEgoLane(l => {
-        if (selectedAction === 'left' && l > 0) return l - 1;
-        if (selectedAction === 'right' && l < 3) return l + 1;
-        return l;
-      });
-
       // Update metrics
       setRlMetrics(m => ({
         ...m,
@@ -529,7 +520,6 @@ export function DashboardV4() {
     URL.revokeObjectURL(url);
   }, [environment, algorithm, totalEpisodes, rewards]);
 
-  const isCity = environment !== 'highway';
 
   return (
     <div className="min-h-screen bg-[#000000] text-white font-['Space_Grotesk',sans-serif]">
@@ -657,24 +647,15 @@ export function DashboardV4() {
 
         {/* Center - Visualization */}
         <div className="flex-1 flex flex-col p-3 gap-3">
-          {/* Map/Highway */}
+          {/* City Map */}
           <div className="flex-1 relative rounded-lg overflow-hidden border border-white/10">
-            {isCity ? (
-              <CityMap
-                city={environment}
-                vehicle={getCityVehicle(environment, egoSpeed, routeProgress)}
-                route={getCityRoute(environment)}
-                destination={getCityDestination(environment)}
-                isSimulating={status === 'training'}
-              />
-            ) : (
-              <Highway2D
-                lanes={4}
-                egoSpeed={egoSpeed}
-                egoLane={egoLane}
-                isSimulating={status === 'training'}
-              />
-            )}
+            <CityMap
+              city={environment}
+              vehicle={getCityVehicle(environment, egoSpeed, routeProgress)}
+              route={getCityRoute(environment)}
+              destination={getCityDestination(environment)}
+              isSimulating={status === 'training'}
+            />
             {showEpisodeComplete && <EpisodeCompleteOverlay episode={episode} reward={rewardHistory[rewardHistory.length - 1] || 0} />}
           </div>
 
@@ -702,24 +683,6 @@ export function DashboardV4() {
             </div>
           </div>
 
-          {/* Lane - only for highway */}
-          {!isCity && (
-            <div className="p-3 border-b border-white/5">
-              <div className="text-[10px] text-white/40 uppercase tracking-widest mb-2">Lane</div>
-              <div className="flex gap-1">
-                {[0, 1, 2, 3].map(l => (
-                  <div
-                    key={l}
-                    className={`flex-1 h-8 rounded flex items-center justify-center text-xs font-mono ${
-                      l === egoLane ? 'bg-[#00d4ff]/20 border border-[#00d4ff] text-[#00d4ff]' : 'bg-white/5 text-white/30'
-                    }`}
-                  >
-                    {l + 1}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* RL Metrics */}
           <div className="p-3 border-b border-white/5">

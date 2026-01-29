@@ -73,7 +73,6 @@ export function CityMap({
   destination,
   route = [],
   isSimulating = false,
-  onPositionClick,
 }: CityMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
@@ -85,32 +84,45 @@ export function CityMap({
 
   // Initialize map
   useEffect(() => {
-    if (!mapContainerRef.current || mapRef.current) return;
+    if (!mapContainerRef.current) return;
+
+    // Cleanup previous map
+    if (mapRef.current) {
+      mapRef.current.remove();
+      mapRef.current = null;
+      vehicleMarkerRef.current = null;
+    }
+
+    setMapLoaded(false);
 
     // Dynamic import of Leaflet
     const loadLeaflet = async () => {
       try {
-        // Check if Leaflet is available
-        const L = (window as any).L;
-        if (!L) {
+        let leaflet = (window as any).L;
+        if (!leaflet) {
           // Load Leaflet from CDN
           await new Promise<void>((resolve, reject) => {
-            // CSS
-            const css = document.createElement('link');
-            css.rel = 'stylesheet';
-            css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-            document.head.appendChild(css);
+            if (!document.querySelector('link[href*="leaflet"]')) {
+              const css = document.createElement('link');
+              css.rel = 'stylesheet';
+              css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+              document.head.appendChild(css);
+            }
 
-            // JS
-            const script = document.createElement('script');
-            script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-            script.onload = () => resolve();
-            script.onerror = () => reject(new Error('Failed to load Leaflet'));
-            document.head.appendChild(script);
+            if (!document.querySelector('script[src*="leaflet"]')) {
+              const script = document.createElement('script');
+              script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+              script.onload = () => resolve();
+              script.onerror = () => reject(new Error('Failed to load Leaflet'));
+              document.head.appendChild(script);
+            } else {
+              resolve();
+            }
           });
+          leaflet = (window as any).L;
         }
 
-        const leaflet = (window as any).L;
+        if (!mapContainerRef.current) return;
 
         // Create map with bounds
         const cfg = config as typeof config & { bounds: [[number, number], [number, number]] };
@@ -125,22 +137,14 @@ export function CityMap({
           maxBoundsViscosity: 1.0,
         });
 
-        // Dark theme tiles (CartoDB Dark Matter)
+        // Dark theme tiles
         leaflet
           .tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
             maxZoom: 19,
           })
           .addTo(mapRef.current);
 
-        // Add zoom control to bottom right
         leaflet.control.zoom({ position: 'bottomright' }).addTo(mapRef.current);
-
-        // Click handler
-        if (onPositionClick) {
-          mapRef.current.on('click', (e: any) => {
-            onPositionClick(e.latlng.lat, e.latlng.lng);
-          });
-        }
 
         setMapLoaded(true);
       } catch (err) {
@@ -155,16 +159,11 @@ export function CityMap({
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
+        vehicleMarkerRef.current = null;
       }
     };
-  }, [config, onPositionClick]);
+  }, [city]);
 
-  // Update map center when city changes
-  useEffect(() => {
-    if (mapRef.current && mapLoaded) {
-      mapRef.current.setView(config.center, config.zoom);
-    }
-  }, [city, config, mapLoaded]);
 
   // Update vehicle marker
   useEffect(() => {
