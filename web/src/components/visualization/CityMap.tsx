@@ -147,13 +147,6 @@ export function CityMap({
 
         leaflet.control.zoom({ position: 'bottomright' }).addTo(mapRef.current);
 
-        // Click handler for setting waypoints
-        if (onPositionClick) {
-          mapRef.current.on('click', (e: any) => {
-            onPositionClick(e.latlng.lat, e.latlng.lng);
-          });
-        }
-
         setMapLoaded(true);
       } catch (err) {
         setError('Failed to load map');
@@ -172,6 +165,24 @@ export function CityMap({
     };
   }, [city]);
 
+  // Handle click events for waypoint setting
+  useEffect(() => {
+    if (!mapRef.current || !mapLoaded) return;
+
+    const handleClick = (e: any) => {
+      if (onPositionClick) {
+        onPositionClick(e.latlng.lat, e.latlng.lng);
+      }
+    };
+
+    mapRef.current.on('click', handleClick);
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.off('click', handleClick);
+      }
+    };
+  }, [mapLoaded, onPositionClick]);
 
   // Update vehicle marker
   useEffect(() => {
