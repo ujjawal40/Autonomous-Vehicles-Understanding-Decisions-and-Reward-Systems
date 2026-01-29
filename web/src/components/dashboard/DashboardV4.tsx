@@ -320,104 +320,57 @@ function EpisodeCompleteOverlay({ episode, reward }: { episode: number; reward: 
 // HELPERS
 // ============================================
 
-const CITY_DATA: Record<string, {
-  center: { lat: number; lng: number };
-  route: [number, number][];
-  destination: { lat: number; lng: number; name: string };
+// City start/end points for routing
+const CITY_ENDPOINTS: Record<string, {
+  start: { lat: number; lng: number };
+  end: { lat: number; lng: number };
+  destName: string;
 }> = {
   london: {
-    // Soho → Leicester Square → Covent Garden (following actual streets)
-    center: { lat: 51.5134, lng: -0.1365 },
-    route: [
-      [51.5134, -0.1365], // Start: Wardour St, Soho
-      [51.5131, -0.1355], // Wardour St south
-      [51.5128, -0.1340], // Turn east onto Old Compton St
-      [51.5126, -0.1320], // Old Compton St
-      [51.5124, -0.1300], // Approaching Charing Cross Rd
-      [51.5127, -0.1285], // Turn onto Charing Cross Rd
-      [51.5132, -0.1280], // Charing Cross Rd north
-      [51.5138, -0.1278], // Leicester Square area
-      [51.5142, -0.1275], // Continue north
-      [51.5148, -0.1268], // Cranbourn St
-      [51.5152, -0.1255], // Long Acre approach
-      [51.5108, -0.1240], // Turn onto Long Acre
-      [51.5112, -0.1225], // Long Acre east
-      [51.5115, -0.1210], // Approaching Covent Garden
-      [51.5118, -0.1205], // Covent Garden Piazza
-    ],
-    destination: { lat: 51.5118, lng: -0.1205, name: 'Covent Garden' },
+    start: { lat: 51.5134, lng: -0.1370 }, // Soho
+    end: { lat: 51.5117, lng: -0.1240 }, // Covent Garden
+    destName: 'Covent Garden',
   },
   nyc: {
-    // Times Square → Bryant Park → Grand Central (following streets)
-    center: { lat: 40.7580, lng: -73.9855 },
-    route: [
-      [40.7580, -73.9855], // Start: Times Square
-      [40.7578, -73.9845], // 42nd St east
-      [40.7576, -73.9835], // Continue 42nd St
-      [40.7574, -73.9825], // 42nd St
-      [40.7572, -73.9815], // Approaching 6th Ave
-      [40.7565, -73.9815], // Turn south on 6th Ave
-      [40.7555, -73.9820], // Bryant Park west side
-      [40.7545, -73.9818], // Continue south
-      [40.7545, -73.9805], // Turn east on 40th St
-      [40.7548, -73.9790], // 40th St east
-      [40.7550, -73.9775], // Approaching Park Ave
-      [40.7555, -73.9770], // Turn north on Park Ave
-      [40.7565, -73.9768], // Park Ave north
-      [40.7575, -73.9765], // Grand Central approach
-      [40.7527, -73.9772], // Grand Central Terminal
-    ],
-    destination: { lat: 40.7527, lng: -73.9772, name: 'Grand Central' },
+    start: { lat: 40.7580, lng: -73.9855 }, // Times Square
+    end: { lat: 40.7527, lng: -73.9772 }, // Grand Central
+    destName: 'Grand Central',
   },
   tokyo: {
-    // Shibuya → Harajuku (following Meiji-dori)
-    center: { lat: 35.6595, lng: 139.7004 },
-    route: [
-      [35.6595, 139.7004], // Start: Shibuya Crossing
-      [35.6600, 139.7000], // Shibuya station area
-      [35.6608, 139.6995], // Turn onto Meiji-dori
-      [35.6618, 139.6990], // Meiji-dori north
-      [35.6628, 139.6988], // Continue north
-      [35.6640, 139.6985], // Approaching Harajuku
-      [35.6652, 139.6982], // Harajuku south
-      [35.6665, 139.6980], // Cat Street area
-      [35.6678, 139.6978], // Near Takeshita St
-      [35.6690, 139.6975], // Harajuku Station approach
-      [35.6702, 139.7025], // Turn east towards Meiji Shrine
-      [35.6710, 139.7030], // Meiji Shrine entrance
-      [35.6715, 139.7035], // Harajuku area
-    ],
-    destination: { lat: 35.6715, lng: 139.7035, name: 'Meiji Shrine' },
+    start: { lat: 35.6595, lng: 139.7004 }, // Shibuya
+    end: { lat: 35.6715, lng: 139.7035 }, // Meiji Shrine
+    destName: 'Meiji Shrine',
   },
   mumbai: {
-    // CST → Marine Drive (following actual roads)
-    center: { lat: 19.0760, lng: 72.8777 },
-    route: [
-      [19.0760, 72.8777], // Start: CST Station
-      [19.0755, 72.8770], // DN Road south
-      [19.0748, 72.8762], // Continue south
-      [19.0740, 72.8755], // Flora Fountain area
-      [19.0732, 72.8748], // Turn west
-      [19.0725, 72.8735], // Veer Nariman Rd
-      [19.0720, 72.8720], // Continue west
-      [19.0718, 72.8705], // Approaching Churchgate
-      [19.0715, 72.8690], // Churchgate station
-      [19.0710, 72.8675], // Marine Drive approach
-      [19.0705, 72.8660], // Marine Drive start
-      [19.0698, 72.8645], // Marine Drive south
-      [19.0690, 72.8630], // Continue along coast
-      [19.0680, 72.8620], // Marine Drive
-      [19.0670, 72.8615], // Nariman Point approach
-    ],
-    destination: { lat: 19.0670, lng: 72.8615, name: 'Nariman Point' },
+    start: { lat: 19.0760, lng: 72.8777 }, // CST
+    end: { lat: 19.0760, lng: 72.8240 }, // Marine Drive
+    destName: 'Marine Drive',
   },
 };
 
-function getCityVehicle(city: string, speed: number, progress: number) {
-  const data = CITY_DATA[city] || CITY_DATA.london;
-  const route = data.route;
+// Fetch real route from OSRM routing API
+async function fetchRoute(start: { lat: number; lng: number }, end: { lat: number; lng: number }): Promise<[number, number][]> {
+  try {
+    const url = `https://router.project-osrm.org/route/v1/driving/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson`;
+    const response = await fetch(url);
+    const data = await response.json();
 
-  // Interpolate position along route based on progress
+    if (data.routes && data.routes[0]) {
+      // Convert [lng, lat] to [lat, lng] format
+      return data.routes[0].geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
+    }
+  } catch (err) {
+    console.error('Failed to fetch route:', err);
+  }
+  // Fallback to straight line
+  return [[start.lat, start.lng], [end.lat, end.lng]];
+}
+
+function getVehicleOnRoute(route: [number, number][], progress: number, speed: number) {
+  if (route.length < 2) {
+    return { lat: route[0]?.[0] || 0, lng: route[0]?.[1] || 0, heading: 0, speed };
+  }
+
   const totalSegments = route.length - 1;
   const progressNorm = (progress / 100) * totalSegments;
   const segmentIndex = Math.min(Math.floor(progressNorm), totalSegments - 1);
@@ -429,32 +382,11 @@ function getCityVehicle(city: string, speed: number, progress: number) {
   const lat = start[0] + (end[0] - start[0]) * segmentProgress;
   const lng = start[1] + (end[1] - start[1]) * segmentProgress;
 
-  // Calculate heading based on direction (lat/lng to degrees)
   const dLat = end[0] - start[0];
   const dLng = end[1] - start[1];
   const heading = Math.atan2(dLng, dLat) * (180 / Math.PI);
 
-  // Check if turning (compare with previous segment)
-  let isTurning = false;
-  if (segmentIndex > 0) {
-    const prevStart = route[segmentIndex - 1];
-    const prevHeading = Math.atan2(start[1] - prevStart[1], start[0] - prevStart[0]) * (180 / Math.PI);
-    const headingDiff = Math.abs(heading - prevHeading);
-    isTurning = headingDiff > 15;
-  }
-
-  // Slow down when turning
-  const adjustedSpeed = isTurning ? speed * 0.5 : speed;
-
-  return { lat, lng, heading, speed: adjustedSpeed };
-}
-
-function getCityRoute(city: string) {
-  return CITY_DATA[city]?.route || CITY_DATA.london.route;
-}
-
-function getCityDestination(city: string) {
-  return CITY_DATA[city]?.destination || CITY_DATA.london.destination;
+  return { lat, lng, heading, speed };
 }
 
 // ============================================
@@ -478,6 +410,22 @@ export function DashboardV4() {
   const [rewardHistory, setRewardHistory] = useState<number[]>([]);
   const [episodeReward, setEpisodeReward] = useState(0);
   const [showEpisodeComplete, setShowEpisodeComplete] = useState(false);
+  const [currentRoute, setCurrentRoute] = useState<[number, number][]>([]);
+  const [routeLoading, setRouteLoading] = useState(true);
+
+  // Fetch route when environment changes
+  useEffect(() => {
+    const endpoints = CITY_ENDPOINTS[environment];
+    if (!endpoints) return;
+
+    setRouteLoading(true);
+    setRouteProgress(0);
+
+    fetchRoute(endpoints.start, endpoints.end).then(route => {
+      setCurrentRoute(route);
+      setRouteLoading(false);
+    });
+  }, [environment]);
 
   const [rewards, setRewards] = useState<RewardConfig[]>([
     { id: 'speed', name: 'Speed Optimization', value: 1.0, description: 'Reward for maintaining target velocity' },
@@ -732,13 +680,22 @@ export function DashboardV4() {
         <div className="flex-1 flex flex-col p-3 gap-3">
           {/* City Map */}
           <div className="flex-1 relative rounded-lg overflow-hidden border border-white/10">
-            <CityMap
-              city={environment}
-              vehicle={getCityVehicle(environment, egoSpeed, routeProgress)}
-              route={getCityRoute(environment)}
-              destination={getCityDestination(environment)}
-              isSimulating={status === 'training'}
-            />
+            {routeLoading ? (
+              <div className="absolute inset-0 flex items-center justify-center bg-[#0a0a0f]">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-8 h-8 border-2 border-[#00d4ff] border-t-transparent rounded-full animate-spin" />
+                  <span className="text-sm text-white/50">Loading route...</span>
+                </div>
+              </div>
+            ) : (
+              <CityMap
+                city={environment}
+                vehicle={getVehicleOnRoute(currentRoute, routeProgress, egoSpeed)}
+                route={currentRoute}
+                destination={CITY_ENDPOINTS[environment] ? { ...CITY_ENDPOINTS[environment].end, name: CITY_ENDPOINTS[environment].destName } : undefined}
+                isSimulating={status === 'training'}
+              />
+            )}
             {showEpisodeComplete && <EpisodeCompleteOverlay episode={episode} reward={rewardHistory[rewardHistory.length - 1] || 0} />}
           </div>
 
