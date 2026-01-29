@@ -14,30 +14,34 @@ interface CityConfig {
   zoom: number;
 }
 
-const CITY_CONFIGS: Record<string, CityConfig> = {
+const CITY_CONFIGS: Record<string, CityConfig & { bounds: [[number, number], [number, number]] }> = {
   london: {
     id: 'london',
     name: 'London',
-    center: [51.5137, -0.1337], // Soho
+    center: [51.5137, -0.1337],
     zoom: 16,
+    bounds: [[51.50, -0.16], [51.53, -0.10]],
   },
   nyc: {
     id: 'nyc',
     name: 'New York',
-    center: [40.758, -73.9855], // Times Square
+    center: [40.758, -73.9855],
     zoom: 16,
+    bounds: [[40.74, -74.01], [40.78, -73.96]],
   },
   tokyo: {
     id: 'tokyo',
     name: 'Tokyo',
-    center: [35.6595, 139.7004], // Shibuya
+    center: [35.6595, 139.7004],
     zoom: 16,
+    bounds: [[35.64, 139.68], [35.68, 139.72]],
   },
   mumbai: {
     id: 'mumbai',
     name: 'Mumbai',
-    center: [19.076, 72.8777], // CST
+    center: [19.076, 72.8777],
     zoom: 16,
+    bounds: [[19.05, 72.85], [19.10, 72.91]],
   },
 };
 
@@ -108,12 +112,17 @@ export function CityMap({
 
         const leaflet = (window as any).L;
 
-        // Create map
+        // Create map with bounds
+        const cfg = config as typeof config & { bounds: [[number, number], [number, number]] };
         mapRef.current = leaflet.map(mapContainerRef.current, {
           center: config.center,
           zoom: config.zoom,
           zoomControl: false,
           attributionControl: false,
+          minZoom: 14,
+          maxZoom: 18,
+          maxBounds: cfg.bounds,
+          maxBoundsViscosity: 1.0,
         });
 
         // Dark theme tiles (CartoDB Dark Matter)

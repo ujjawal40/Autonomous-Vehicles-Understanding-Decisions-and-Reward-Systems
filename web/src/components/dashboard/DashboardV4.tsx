@@ -187,34 +187,18 @@ function AlgorithmSelector({ selected, onChange, disabled }: { selected: string;
 function RewardConfiguration({
   rewards,
   onChange,
-  onApply,
-  hasChanges,
   disabled,
 }: {
   rewards: RewardConfig[];
   onChange: (id: string, value: number) => void;
-  onApply: () => void;
-  hasChanges: boolean;
   disabled?: boolean;
 }) {
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h3 className="text-[10px] text-white/40 uppercase tracking-widest flex items-center gap-1">
-          <Target size={10} />
-          Reward Configuration
-        </h3>
-        {hasChanges && (
-          <button
-            onClick={onApply}
-            disabled={disabled}
-            className="flex items-center gap-1 px-2 py-1 text-[10px] bg-[#00ff88] text-black rounded hover:bg-[#00ff88]/80 disabled:opacity-50 transition-all font-medium"
-          >
-            <RefreshCw size={10} />
-            Apply & Retrain
-          </button>
-        )}
-      </div>
+      <h3 className="text-[10px] text-white/40 uppercase tracking-widest flex items-center gap-1">
+        <Target size={10} />
+        Reward Configuration
+      </h3>
 
       <div className="space-y-2">
         {rewards.map(reward => (
@@ -275,6 +259,50 @@ function MetricBox({ label, value, highlight }: { label: string; value: string; 
       <div className={`font-mono text-[11px] ${highlight ? 'text-[#00d4ff]' : 'text-white'}`}>{value}</div>
     </div>
   );
+}
+
+// ============================================
+// HELPERS
+// ============================================
+
+const CITY_DATA: Record<string, {
+  center: { lat: number; lng: number };
+  route: [number, number][];
+  destination: { lat: number; lng: number; name: string };
+}> = {
+  london: {
+    center: { lat: 51.5137, lng: -0.1337 },
+    route: [[51.5137, -0.1337], [51.515, -0.130], [51.517, -0.125], [51.518, -0.120]],
+    destination: { lat: 51.518, lng: -0.120, name: 'Covent Garden' },
+  },
+  nyc: {
+    center: { lat: 40.758, lng: -73.9855 },
+    route: [[40.758, -73.9855], [40.760, -73.983], [40.762, -73.980], [40.765, -73.978]],
+    destination: { lat: 40.765, lng: -73.978, name: 'Central Park' },
+  },
+  tokyo: {
+    center: { lat: 35.6595, lng: 139.7004 },
+    route: [[35.6595, 139.7004], [35.661, 139.702], [35.663, 139.705], [35.665, 139.708]],
+    destination: { lat: 35.665, lng: 139.708, name: 'Harajuku' },
+  },
+  mumbai: {
+    center: { lat: 19.076, lng: 72.8777 },
+    route: [[19.076, 72.8777], [19.078, 72.880], [19.080, 72.883], [19.082, 72.886]],
+    destination: { lat: 19.082, lng: 72.886, name: 'Marine Drive' },
+  },
+};
+
+function getCityVehicle(city: string, speed: number) {
+  const data = CITY_DATA[city] || CITY_DATA.london;
+  return { lat: data.center.lat, lng: data.center.lng, heading: 45, speed };
+}
+
+function getCityRoute(city: string) {
+  return CITY_DATA[city]?.route || CITY_DATA.london.route;
+}
+
+function getCityDestination(city: string) {
+  return CITY_DATA[city]?.destination || CITY_DATA.london.destination;
 }
 
 // ============================================
@@ -390,13 +418,6 @@ export function DashboardV4() {
     setRewardsChanged(true);
   }, []);
 
-  const handleApplyRewards = useCallback(() => {
-    setRewardsChanged(false);
-    setStatus('training');
-    setEpisode(0);
-    setStep(0);
-  }, []);
-
   const isCity = environment !== 'highway';
 
   return (
@@ -467,10 +488,17 @@ export function DashboardV4() {
             <div className="flex gap-2">
               {status === 'idle' && (
                 <button
-                  onClick={() => setStatus('training')}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-[#00ff88] text-black text-sm font-medium rounded hover:bg-[#00ff88]/80 transition-all"
+                  onClick={() => {
+                    if (rewardsChanged) setRewardsChanged(false);
+                    setStatus('training');
+                  }}
+                  className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium rounded transition-all ${
+                    rewardsChanged
+                      ? 'bg-[#ffcc00] text-black hover:bg-[#ffcc00]/80'
+                      : 'bg-[#00ff88] text-black hover:bg-[#00ff88]/80'
+                  }`}
                 >
-                  <Play size={14} /> Start
+                  {rewardsChanged ? <><RefreshCw size={14} /> Apply & Retrain</> : <><Play size={14} /> Start</>}
                 </button>
               )}
               {status === 'training' && (
@@ -512,25 +540,20 @@ export function DashboardV4() {
             <RewardConfiguration
               rewards={rewards}
               onChange={handleRewardChange}
-              onApply={handleApplyRewards}
-              hasChanges={rewardsChanged}
             />
           </div>
         </div>
 
         {/* Center - Visualization */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col p-3 gap-3">
           {/* Map/Highway */}
-          <div className="flex-1 relative">
+          <div className="flex-1 relative rounded-lg overflow-hidden border border-white/10">
             {isCity ? (
               <CityMap
                 city={environment}
-                vehicle={{
-                  lat: environment === 'london' ? 51.5137 : environment === 'nyc' ? 40.758 : 35.6595,
-                  lng: environment === 'london' ? -0.1337 : environment === 'nyc' ? -73.9855 : 139.7004,
-                  heading: 45,
-                  speed: egoSpeed,
-                }}
+                vehicle={getCityVehicle(environment, egoSpeed)}
+                route={getCityRoute(environment)}
+                destination={getCityDestination(environment)}
                 isSimulating={status === 'training'}
               />
             ) : (
@@ -554,7 +577,7 @@ export function DashboardV4() {
         </div>
 
         {/* Right Panel - Metrics */}
-        <div className="w-64 border-l border-white/5 bg-[#030305] overflow-y-auto">
+        <div className="w-80 border-l border-white/5 bg-[#030305] overflow-y-auto">
           {/* Speed */}
           <div className="p-3 border-b border-white/5">
             <div className="text-[10px] text-white/40 uppercase tracking-widest mb-2">Speed</div>
@@ -567,22 +590,24 @@ export function DashboardV4() {
             </div>
           </div>
 
-          {/* Lane */}
-          <div className="p-3 border-b border-white/5">
-            <div className="text-[10px] text-white/40 uppercase tracking-widest mb-2">Lane</div>
-            <div className="flex gap-1">
-              {[0, 1, 2, 3].map(l => (
-                <div
-                  key={l}
-                  className={`flex-1 h-8 rounded flex items-center justify-center text-xs font-mono ${
-                    l === egoLane ? 'bg-[#00d4ff]/20 border border-[#00d4ff] text-[#00d4ff]' : 'bg-white/5 text-white/30'
-                  }`}
-                >
-                  {l + 1}
-                </div>
-              ))}
+          {/* Lane - only for highway */}
+          {!isCity && (
+            <div className="p-3 border-b border-white/5">
+              <div className="text-[10px] text-white/40 uppercase tracking-widest mb-2">Lane</div>
+              <div className="flex gap-1">
+                {[0, 1, 2, 3].map(l => (
+                  <div
+                    key={l}
+                    className={`flex-1 h-8 rounded flex items-center justify-center text-xs font-mono ${
+                      l === egoLane ? 'bg-[#00d4ff]/20 border border-[#00d4ff] text-[#00d4ff]' : 'bg-white/5 text-white/30'
+                    }`}
+                  >
+                    {l + 1}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* RL Metrics */}
           <div className="p-3 border-b border-white/5">
