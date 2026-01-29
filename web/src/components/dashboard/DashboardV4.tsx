@@ -626,9 +626,9 @@ export function DashboardV4() {
       </header>
 
       {/* Main content */}
-      <div className="flex h-[calc(100vh-3.5rem)]">
+      <div className="flex h-[calc(100vh-3.5rem)] gap-2 p-2 bg-[#000000]">
         {/* Left Panel */}
-        <div className="w-72 border-r border-white/5 p-3 space-y-4 overflow-y-auto bg-[#030305]">
+        <div className="w-72 rounded-lg border border-white/10 p-3 space-y-4 overflow-y-auto bg-[#030305]">
           <AlgorithmSelector selected={algorithm} onChange={setAlgorithm} disabled={status === 'training'} />
 
           {/* Training controls */}
@@ -794,7 +794,7 @@ export function DashboardV4() {
         </div>
 
         {/* Right Panel - Metrics */}
-        <div className="w-80 border-l border-white/5 bg-[#030305] overflow-y-auto">
+        <div className="w-80 rounded-lg border border-white/10 bg-[#030305] overflow-y-auto">
           {/* Speed */}
           <div className="p-3 border-b border-white/5">
             <div className="text-[10px] text-white/40 uppercase tracking-widest mb-2">Speed</div>
